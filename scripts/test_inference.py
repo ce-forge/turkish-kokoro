@@ -114,7 +114,7 @@ def run_inference(
     import numpy as np
     import soundfile as sf
     import torch
-    from kokoro import KModel, KPipeline
+    from kokoro import KModel
 
     if device == "auto":
         device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -126,8 +126,11 @@ def run_inference(
     kmodel = KModel(repo_id="hexgrad/Kokoro-82M", config=config_path, model=model_path)
     kmodel = kmodel.to(device).eval()
 
-    # Build pipeline with Turkish language code
-    pipeline = KPipeline(lang_code="t", repo_id="hexgrad/Kokoro-82M", model=kmodel)
+    # Turkish G2P — Kokoro doesn't have a Turkish lang_code, so we
+    # phonemize ourselves and call the model directly.
+    from misaki import espeak
+    g2p = espeak.EspeakG2P(language='tr')
+    PHONEME_FIXUPS = {'ɫ': 'l'}
 
     # Load voicepack
     print(f"Loading voicepack: {voicepack_path}")
@@ -142,19 +145,24 @@ def run_inference(
     for i, text in enumerate(TEST_SENTENCES):
         print(f"  [{i + 1}/{len(TEST_SENTENCES)}] {text[:60]}...")
 
-        generator = pipeline(text, voice=voice, speed=1)
-        all_audio = []
-        for gs, ps, audio in generator:
-            all_audio.append(audio)
+        phonemes, _ = g2p(text)
+        for old, new in PHONEME_FIXUPS.items():
+            phonemes = phonemes.replace(old, new)
+        print(f"         phonemes: {phonemes[:60]}...")
 
-        if all_audio:
-            combined = np.concatenate(all_audio)
+        # Truncate to 510 tokens (PLBERT max position embeddings)
+        if len(phonemes) > 510:
+            phonemes = phonemes[:510]
+
+        try:
+            result = kmodel(phonemes, voice[len(phonemes)-1], 1.0, return_output=True)
+            audio = result.audio
             wav_path = out / f"test_{i + 1:02d}.wav"
-            sf.write(str(wav_path), combined, 24000)
-            duration = len(combined) / 24000
+            sf.write(str(wav_path), audio, 24000)
+            duration = len(audio) / 24000
             print(f"         -> {wav_path} ({duration:.2f}s)")
-        else:
-            print(f"         -> WARNING: No audio generated for sentence {i + 1}")
+        except Exception as e:
+            print(f"         -> ERROR: {e}")
 
     print(f"\nDone! Output files are in: {out}/")
 
