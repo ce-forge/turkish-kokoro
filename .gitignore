@@ -11,3 +11,4 @@ samples/
 *.pyc
 __pycache__/
 StyleTTS2/logs/
+.claude/

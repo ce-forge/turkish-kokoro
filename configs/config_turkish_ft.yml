@@ -1,4 +1,4 @@
-batch_size: 12
+batch_size: 2
 epochs: 15
 epochs_1st: 15
 epochs_2nd: 15

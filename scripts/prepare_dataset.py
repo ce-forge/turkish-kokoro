@@ -344,14 +344,15 @@ def write_lists(
 ) -> None:
     """Write training/train_list.txt and training/val_list.txt.
 
-    Format per line:  <relative_wav_path>|<phonemes>|<speaker_name>
+    Format per line:  <relative_wav_path>|<phonemes>|<speaker_id>
+    StyleTTS2's meldataset.py expects an integer speaker ID.
     """
     TRAINING_DIR.mkdir(parents=True, exist_ok=True)
 
     def _write(path: Path, entries: list[dict]) -> None:
         with open(path, "w", encoding="utf-8") as f:
             for e in entries:
-                line = f"{e['filename']}|{e['phonemes']}|{SPEAKER_NAME}"
+                line = f"{e['filename']}|{e['phonemes']}|0"
                 f.write(line + "\n")
         print(f"[Write] {path}  ({len(entries)} lines)")
 
