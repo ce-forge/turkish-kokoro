@@ -8,11 +8,19 @@ requires-python = ">=3.10, <3.14"
 dependencies = [
     "datasets",
     "huggingface_hub",
+    "loguru",
+    "misaki[en]>=0.9.4",
     "numpy",
     "soundfile",
     "torch",
     "torchaudio",
+    "torchcodec",
+    "tqdm",
+    "transformers",
 ]
 
 [tool.uv]
 find-links = ["https://download.pytorch.org/whl/cu128"]
+
+[tool.uv.sources]
+misaki = { git = "https://github.com/semidark/misaki.git", branch = "main" }
