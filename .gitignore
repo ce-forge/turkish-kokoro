@@ -1,0 +1,13 @@
+.venv/
+dataset/
+training/kokoro_base.pth
+training/train_list.txt
+training/val_list.txt
+training/mels/
+training/f0/
+voices/
+test_output/
+samples/
+*.pyc
+__pycache__/
+StyleTTS2/logs/
